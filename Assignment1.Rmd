@@ -1,0 +1,135 @@
+---
+title: "Assignment: Course Project 1"
+author: "rtorlow"
+date: "`r Sys.Date()`"
+output:
+  knitr:::html_vignette:
+    toc: yes
+    number_sections: yes
+    css: docstyle.css
+---
+
+```{r prep, include = FALSE}
+# global options
+.libPaths("D:/Robert_R/Rpackages")
+options(scipen = 999)
+
+# define directories
+setwd("D:/Coursera/RepData_PeerAssessment1/")
+
+```
+
+***
+
+```{r setup, eval = TRUE, warning= FALSE}
+
+# load necessary R packages
+library("knitr")
+
+# global options (can only be used after knitr was loaded)
+opts_chunk$set(fig.align = "center", echo = TRUE,
+               fig.retina = 10)
+
+library("data.table")
+library("dplyr")
+library("lubridate")
+library("ggplot2")
+
+```
+
+***
+# Code for reading in the dataset and/or processing the data
+```{r import,  echo=TRUE}
+  data <- fread("activity.csv", na.strings="NA" )
+  str(data) 
+  # ok
+```
+  
+***                              
+# Histogram of the total number of steps taken each day
+
+```{r hist,  echo=TRUE}
+# prepare data
+data_acc <- data %>%
+  group_by(date) %>%
+  summarise(steps = sum(steps, na.rm = TRUE))
+
+# make histogram
+ hist(data_acc$steps,
+   main = "Histogram of the total number of steps taken each day",
+   xlab = "number of steps per day")
+
+# Mean and median number of steps taken each day
+  mean(data_acc$steps, na.rm = TRUE)
+  median(data_acc$steps, na.rm = TRUE)
+
+```
+***
+
+# What is the average daily activity pattern?
+
+```{r activity,  echo=TRUE}
+# prepare data
+data_acc2 <- data %>%
+  group_by(interval) %>%
+  summarise(steps = sum(steps, na.rm = TRUE))
+
+plot(data_acc2$interval, data_acc2$steps, 
+  main = "Time series plot of the average number of steps taken",
+  xlab = "interval",
+  ylab = "number of steps",
+  type = "l")
+
+
+
+# The 5-minute interval that, on average, contains the maximum number of steps
+ filter(data_acc2, steps == max(data_acc2$steps))
+ # as you can see it is interval 835 with 10927 steps on average
+```
+***
+# Strategy for imputing missing data
+
+```{r imputed,  echo=TRUE}
+# number of missings
+ sum(is.na(data$steps))
+ 
+ # rate of missingsness (%)
+ sum(is.na(data$steps))/nrow(data) *100
+ 
+# take average per interval to impute missing values 
+data2 <- data %>%
+  group_by(interval) %>%
+  mutate(imp = mean(steps, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(steps = ifelse(is.na(steps), imp, steps))
+
+# Histogram of the total number of steps taken each day after missing values are imputed
+ hist(data2$steps,
+   main = "Histogram of the total number of steps taken each day \n (imputed dataset)",
+   xlab = "number of steps per day")
+   
+```
+
+***
+
+# Panel plot comparison across weekdays and weekends
+```{r weekdays,  echo=TRUE}
+# indicator: weekend / weekdays
+data2 <- data2 %>%
+  mutate(date = ymd(date),
+        weekend = wday(date),
+        weekend = ifelse(weekend %in% c(1,7), "weekend", "weekdays")) %>% # lubridate sets Sunday = 1 
+        group_by(weekend, interval) %>%
+        summarise(steps = sum(steps, na.rm = TRUE))
+
+# plot
+g <- ggplot(data = data2, aes(interval, steps, color = weekend))
+g <- g + geom_line() +
+    xlab("interval") +
+    ylab("avarage number of steps") +
+    ggtitle('Average number of steps taken \nper 5-minute interval across weekdays and weekends ')
+print(g)
+    
+    ```
+    
+***
