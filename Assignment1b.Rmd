@@ -1,12 +1,8 @@
 ---
-title: "Assignment: Course Project 1"
+title: "Assignment 1"
 author: "rtorlow"
-date: "`r Sys.Date()`"
-output:
-  knitr:::html_vignette:
-    toc: yes
-    number_sections: yes
-    css: docstyle.css
+date: "14. Februar 2016"
+output: html_document
 ---
 
 ```{r prep, include = FALSE}
@@ -16,13 +12,12 @@ options(scipen = 999)
 
 # define directories
 setwd("D:/Coursera/RepData_PeerAssessment1/")
-pathfig <- "D:/Coursera/RepData_PeerAssessment1/fig/"
 
 ```
 
 ***
 
-```{r setup, eval = TRUE, message= FALSE}
+```{r setup, eval = TRUE, warning= FALSE}
 
 # load necessary R packages
 library("knitr")
